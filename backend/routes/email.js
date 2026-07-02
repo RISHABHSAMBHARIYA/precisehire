@@ -35,11 +35,28 @@ router.get('/test', async (req, res) => {
 router.post('/interview', async (req, res) => {
   try {
     const { candidates, details } = req.body;
+    if (!Array.isArray(candidates)) {
+      return res.json({ success: false, error: 'candidates must be an array', sent: 0, failed: 0 });
+    }
+    // Handle empty candidates array gracefully
+    if (candidates.length === 0) {
+      return res.json({ success: true, sent: 0, failed: 0 });
+    }
+    // Validate candidates objects
+    for (const c of candidates) {
+      if (!c || typeof c !== 'object' || !c.candidateId) {
+        return res.json({ success: false, error: 'Each candidate must contain a candidateId', sent: 0, failed: 0 });
+      }
+    }
     console.log(`[EMAIL] Sending interview invites to ${candidates?.length} candidates...`);
     const results = await sendInterviewInvites(candidates, details);
     
     for (const c of candidates) {
-      await updateCandidate(c.candidateId, c.jobId || details.jobId, { status: 'invited', currentRound: 'Interview' });
+      try {
+        await updateCandidate(c.candidateId, c.jobId || details?.jobId, { status: 'invited', currentRound: 'Interview' });
+      } catch (updateErr) {
+        console.warn(`[EMAIL] Failed to update candidate ${c.candidateId} in DB:`, updateErr.message);
+      }
     }
 
     res.json({ success: true, ...results });
@@ -51,11 +68,24 @@ router.post('/interview', async (req, res) => {
 router.post('/assessment', async (req, res) => {
   try {
     const { candidates, details } = req.body;
+    if (!Array.isArray(candidates)) {
+      return res.json({ success: false, error: 'candidates must be an array', sent: 0, failed: 0 });
+    }
+    // Validate candidates objects
+    for (const c of candidates) {
+      if (!c || typeof c !== 'object' || !c.candidateId) {
+        return res.json({ success: false, error: 'Each candidate must contain a candidateId', sent: 0, failed: 0 });
+      }
+    }
     console.log(`[EMAIL] Sending assessment links to ${candidates?.length} candidates...`);
     const results = await sendAssessmentLinks(candidates, details);
     
     for (const c of candidates) {
-      await updateCandidate(c.candidateId, c.jobId || details.jobId, { status: 'assessment_sent' });
+      try {
+        await updateCandidate(c.candidateId, c.jobId || details?.jobId, { status: 'assessment_sent' });
+      } catch (updateErr) {
+        console.warn(`[EMAIL] Failed to update candidate ${c.candidateId} in DB:`, updateErr.message);
+      }
     }
 
     res.json({ success: true, ...results });
@@ -67,11 +97,24 @@ router.post('/assessment', async (req, res) => {
 router.post('/offer', async (req, res) => {
   try {
     const { candidates, details } = req.body;
+    if (!Array.isArray(candidates)) {
+      return res.json({ success: false, error: 'candidates must be an array', sent: 0, failed: 0 });
+    }
+    // Validate candidates objects
+    for (const c of candidates) {
+      if (!c || typeof c !== 'object' || !c.candidateId) {
+        return res.json({ success: false, error: 'Each candidate must contain a candidateId', sent: 0, failed: 0 });
+      }
+    }
     console.log(`[EMAIL] Sending offer letters to ${candidates?.length} candidates...`);
     const results = await sendOfferLetters(candidates, details);
     
     for (const c of candidates) {
-      await updateCandidate(c.candidateId, c.jobId || details.jobId, { status: 'offered', currentRound: 'Offer' });
+      try {
+        await updateCandidate(c.candidateId, c.jobId || details?.jobId, { status: 'offered', currentRound: 'Offer' });
+      } catch (updateErr) {
+        console.warn(`[EMAIL] Failed to update candidate ${c.candidateId} in DB:`, updateErr.message);
+      }
     }
 
     res.json({ success: true, ...results });
@@ -83,6 +126,15 @@ router.post('/offer', async (req, res) => {
 router.post('/round-clearance', async (req, res) => {
   try {
     const { candidates, details } = req.body;
+    if (!Array.isArray(candidates)) {
+      return res.json({ success: false, error: 'candidates must be an array', sent: 0, failed: 0 });
+    }
+    // Validate candidates objects
+    for (const c of candidates) {
+      if (!c || typeof c !== 'object' || !c.candidateId) {
+        return res.json({ success: false, error: 'Each candidate must contain a candidateId', sent: 0, failed: 0 });
+      }
+    }
     console.log(`[EMAIL] Sending round clearance to ${candidates?.length} candidates...`);
     const results = await sendRoundClearance(candidates, details);
     res.json({ success: true, ...results });
@@ -94,6 +146,15 @@ router.post('/round-clearance', async (req, res) => {
 router.post('/rejection', async (req, res) => {
   try {
     const { candidates, details } = req.body;
+    if (!Array.isArray(candidates)) {
+      return res.json({ success: false, error: 'candidates must be an array', sent: 0, failed: 0 });
+    }
+    // Validate candidates objects
+    for (const c of candidates) {
+      if (!c || typeof c !== 'object' || !c.candidateId) {
+        return res.json({ success: false, error: 'Each candidate must contain a candidateId', sent: 0, failed: 0 });
+      }
+    }
     console.log(`[EMAIL] Sending rejection emails to ${candidates?.length} candidates...`);
     const results = await sendRejectionEmail(candidates, details);
     res.json({ success: true, ...results });

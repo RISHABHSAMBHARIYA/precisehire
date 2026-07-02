@@ -44,10 +44,24 @@ export async function sendEmail(to, subject, bodyText) {
   }
 }
 
+function isMockEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  const lower = email.toLowerCase().trim();
+  return lower.endsWith('@example.com') || 
+         lower.includes('test') || 
+         lower.endsWith('.local') || 
+         lower.endsWith('.example');
+}
+
 export async function sendInterviewInvites(candidates, details) {
   const results = { sent: 0, failed: 0, errors: [] };
   for (const candidate of candidates) {
     try {
+      if (isMockEmail(candidate.email)) {
+        console.log(`[SMTP] Mock sending interview invite to ${candidate.email}`);
+        results.sent++;
+        continue;
+      }
       const body = await generateEmailBody('interview', {
         candidateName: candidate.name,
         jobTitle: details.jobTitle,
@@ -72,6 +86,11 @@ export async function sendAssessmentLinks(candidates, details) {
   const results = { sent: 0, failed: 0, errors: [] };
   for (const candidate of candidates) {
     try {
+      if (isMockEmail(candidate.email)) {
+        console.log(`[SMTP] Mock sending assessment link to ${candidate.email}`);
+        results.sent++;
+        continue;
+      }
       const body = await generateEmailBody('assessment', {
         candidateName: candidate.name,
         jobTitle: details.jobTitle,
@@ -95,6 +114,11 @@ export async function sendOfferLetters(candidates, details) {
   const results = { sent: 0, failed: 0, errors: [] };
   for (const candidate of candidates) {
     try {
+      if (isMockEmail(candidate.email)) {
+        console.log(`[SMTP] Mock sending offer letter to ${candidate.email}`);
+        results.sent++;
+        continue;
+      }
       const body = await generateEmailBody('offer', {
         candidateName: candidate.name,
         jobTitle: details.jobTitle,
@@ -117,6 +141,11 @@ export async function sendRoundClearance(candidates, details) {
   const results = { sent: 0, failed: 0, errors: [] };
   for (const candidate of candidates) {
     try {
+      if (isMockEmail(candidate.email)) {
+        console.log(`[SMTP] Mock sending round clearance to ${candidate.email}`);
+        results.sent++;
+        continue;
+      }
       const body = `Dear ${candidate.name},\n\nCongratulations! You have successfully cleared the ${details.currentRound} for the ${details.jobTitle} position at PreciseHire.\n\nWe will be in touch shortly regarding the next steps of the process.\n\nBest regards,\nPreciseHire Recruitment Team`;
       const res = await sendEmail(candidate.email, `Round Cleared: ${details.jobTitle} - PreciseHire`, body);
       if (res.success) results.sent++;
@@ -135,6 +164,11 @@ export async function sendRejectionEmail(candidates, details) {
   const results = { sent: 0, failed: 0, errors: [] };
   for (const candidate of candidates) {
     try {
+      if (isMockEmail(candidate.email)) {
+        console.log(`[SMTP] Mock sending rejection email to ${candidate.email}`);
+        results.sent++;
+        continue;
+      }
       const body = `Dear ${candidate.name},\n\nThank you for your interest in the ${details.jobTitle} position at PreciseHire.\n\nAfter careful review of your profile, we have decided not to move forward with your application at this time. We appreciate the time you invested in this process and wish you the best in your career search.\n\nBest regards,\nPreciseHire Recruitment Team`;
       const res = await sendEmail(candidate.email, `Application Update: ${details.jobTitle} - PreciseHire`, body);
       if (res.success) results.sent++;

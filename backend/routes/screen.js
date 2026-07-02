@@ -9,7 +9,30 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     const { jobId, jobDetails, weightage } = req.body;
+
+    // Input validation
+    if (!jobId || typeof jobId !== 'string' || !jobId.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing or invalid jobId. A valid string jobId is required.' 
+      });
+    }
+    if (!jobDetails || typeof jobDetails !== 'object') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing or invalid jobDetails. An object with job details is required.' 
+      });
+    }
+
     let candidates = await getCandidatesByJob(jobId);
+
+    // If no candidates found for this jobId, return 400 error
+    if (!candidates || candidates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: `No candidates found for jobId: ${jobId}. Ensure candidates are uploaded before screening.`
+      });
+    }
 
     console.log(`[SCREEN] Starting screening for ${candidates.length} candidates...`);
 

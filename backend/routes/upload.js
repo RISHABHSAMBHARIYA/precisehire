@@ -26,6 +26,17 @@ router.post('/', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, error: 'No file uploaded' });
 
     const candidates = parseExcel(req.file.buffer);
+    
+    // If no valid candidates found, return error (handles malformed/empty Excel)
+    if (!candidates || candidates.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No valid candidates found in the uploaded file. Ensure the Excel file has Name and Email columns.',
+        count: 0,
+        candidates: []
+      });
+    }
+
     const jobId = uuidv4();
     const timestamp = Date.now();
     const key = `uploads/${timestamp}_${req.file.originalname}`;
@@ -51,6 +62,14 @@ router.post('/', upload.single('file'), async (req, res) => {
     console.error('Upload route error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// Multer error handler (e.g. file too large, wrong mime type)
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || err.message === 'Only Excel files are allowed!') {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+  next(err);
 });
 
 export default router;

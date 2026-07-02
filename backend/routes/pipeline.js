@@ -47,6 +47,15 @@ router.get('/status/:jobId', async (req, res) => {
 router.post('/create', async (req, res) => {
   try {
     const { jobId, candidateIds } = req.body;
+
+    // Input validation
+    if (!jobId || typeof jobId !== 'string' || !jobId.trim()) {
+      return res.status(400).json({ success: false, error: 'Missing or invalid jobId' });
+    }
+    if (!Array.isArray(candidateIds) || candidateIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'candidateIds must be a non-empty array' });
+    }
+
     console.log(`[PIPELINE] Initializing pipeline for ${candidateIds.length} candidates...`);
     
     const job = await getJob(jobId);
@@ -56,10 +65,14 @@ router.post('/create', async (req, res) => {
     }
 
     for (const id of candidateIds) {
-      await updateCandidate(id, jobId, { 
-        currentRound: rounds[0], 
-        status: 'in_pipeline' 
-      });
+      try {
+        await updateCandidate(id, jobId, { 
+          currentRound: rounds[0], 
+          status: 'in_pipeline' 
+        });
+      } catch (updateErr) {
+        console.warn(`[PIPELINE] Failed to update candidate ${id}:`, updateErr.message);
+      }
     }
     res.json({ success: true });
   } catch (error) {
@@ -71,6 +84,18 @@ router.post('/create', async (req, res) => {
 router.post('/mark-result', async (req, res) => {
   try {
     const { candidateId, jobId, result, currentRound } = req.body;
+
+    // Input validation
+    if (!candidateId || typeof candidateId !== 'string') {
+      return res.status(400).json({ success: false, error: 'Missing or invalid candidateId' });
+    }
+    if (!jobId || typeof jobId !== 'string') {
+      return res.status(400).json({ success: false, error: 'Missing or invalid jobId' });
+    }
+    if (!result || typeof result !== 'string') {
+      return res.status(400).json({ success: false, error: 'Missing or invalid result' });
+    }
+
     const job = await getJob(jobId);
     const rounds = job?.rounds || DEFAULT_ROUNDS;
     
